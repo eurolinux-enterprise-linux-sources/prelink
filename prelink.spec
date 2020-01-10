@@ -1,10 +1,10 @@
 Summary: An ELF prelinking utility
 Name: prelink
-Version: 0.4.3
-Release: 4%{?dist}
+Version: 0.4.4
+Release: 1%{?dist}
 License: GPLv2+
 Group: System Environment/Base
-%define date 20100714
+%define date 20101123
 Source: http://people.redhat.com/jakub/prelink/prelink-%{date}.tar.bz2
 Source2: prelink.conf
 Source3: prelink.cron
@@ -100,6 +100,10 @@ rm -rf %{buildroot}
 %attr(0644,root,root) %verify(not md5 size mtime) %ghost %config(missingok,noreplace) /var/log/prelink/prelink.log
 
 %changelog
+* Tue Nov 23 2010 Jakub Jelinek <jakub@redhat.com> 0.4.4-1
+- support copying over extended attributes (#456105)
+- handle DW_OP_GNU_implicit_pointer, fix handling of DW_OP_call_ref
+
 * Wed Jul 14 2010 Jakub Jelinek <jakub@redhat.com> 0.4.3-4
 - for prelink -u -o ... if no .gnu.prelink_undo section is
   present just pass through the original bits to the output file
