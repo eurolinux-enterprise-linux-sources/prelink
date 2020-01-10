@@ -1,7 +1,7 @@
 Summary: An ELF prelinking utility
 Name: prelink
 Version: 0.4.6
-Release: 3.1%{?dist}
+Release: 3%{?dist}
 %global svnver 196
 License: GPLv2+
 Group: System Environment/Base
@@ -12,8 +12,6 @@ Source: http://people.redhat.com/jakub/prelink/prelink-%{date}.tar.bz2
 Source2: prelink.conf
 Source3: prelink.cron
 Source4: prelink.sysconfig
-Patch1: prelink-dwarf4-fixes.patch
-Patch2: prelink-rh788238.patch
 Buildroot: %{_tmppath}/prelink-root
 #BuildRequires: libelf-devel >= 0.7.0-5
 BuildRequires: elfutils-libelf-devel-static
@@ -31,9 +29,6 @@ and thus programs come up faster.
 
 %prep
 %setup -q -n prelink
-%patch1 -p1
-%patch2 -p1
-chmod 755 testsuite/unprel1.sh
 
 %build
 sed -i -e '/^prelink_LDADD/s/$/ -lpthread/' src/Makefile.{am,in}
@@ -108,13 +103,6 @@ rm -rf %{buildroot}
 %attr(0644,root,root) %verify(not md5 size mtime) %ghost %config(missingok,noreplace) /var/log/prelink/prelink.log
 
 %changelog
-* Fri Jul 19 2013 Jakub Jelinek <jakub@redhat.com> 0.4.6-3.1
-- fix saving of cache if some dependencies are unprelinkable and their                                            
-  dependencies bad (#788238)                                                                                      
-- fix up DWARF4 DW_AT_data_member_location handling                                                               
-- add .debug_macro support                                                                                        
-- add DWZ multifile support                                                                                       
-
 * Wed Oct 12 2011 Jakub Jelinek <jakub@redhat.com> 0.4.6-3
 - add --layout-page-size=N option, default to --layout-page-size=32768
   on AMD Bulldozer (#739460)
