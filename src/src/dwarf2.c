@@ -1,4 +1,4 @@
-/* Copyright (C) 2001, 2002, 2003, 2005, 2006, 2009, 2010 Red Hat, Inc.
+/* Copyright (C) 2001, 2002, 2003, 2005, 2006, 2009, 2010, 2011 Red Hat, Inc.
    Written by Jakub Jelinek <jakub@redhat.com>, 2001.
 
    This program is free software; you can redistribute it and/or modify
@@ -369,6 +369,7 @@ adjust_location_list (DSO *dso, struct cu_data *cu, unsigned char *ptr,
 	case DW_OP_const4u:
 	case DW_OP_const4s:
 	case DW_OP_call4:
+	case DW_OP_GNU_parameter_ref:
 	  ptr += 4;
 	  break;
 	case DW_OP_call_ref:
@@ -394,17 +395,20 @@ adjust_location_list (DSO *dso, struct cu_data *cu, unsigned char *ptr,
 	case DW_OP_consts:
 	case DW_OP_breg0 ... DW_OP_breg31:
 	case DW_OP_fbreg:
+	case DW_OP_GNU_convert:
+	case DW_OP_GNU_reinterpret:
 	  read_uleb128 (ptr);
 	  break;
 	case DW_OP_bregx:
 	case DW_OP_bit_piece:
+	case DW_OP_GNU_regval_type:
 	  read_uleb128 (ptr);
 	  read_uleb128 (ptr);
 	  break;
 	case DW_OP_implicit_value:
 	  {
-	    uint32_t len = read_uleb128 (ptr);
-	    ptr += len;
+	    uint32_t leni = read_uleb128 (ptr);
+	    ptr += leni;
 	  }
 	  break;
 	case DW_OP_GNU_implicit_pointer:
@@ -418,6 +422,28 @@ adjust_location_list (DSO *dso, struct cu_data *cu, unsigned char *ptr,
 	    ptr += ptr_size;
 	  else
 	    ptr += 4;
+	  read_uleb128 (ptr);
+	  break;
+        case DW_OP_GNU_entry_value:
+	  {
+	    uint32_t leni = read_uleb128 (ptr);
+	    if ((end - ptr) < leni)
+	      {
+		error (0, 0, "%s: DWARF DW_OP_GNU_entry_value with too large"
+		       " length", dso->filename);
+		return 1;
+	      }
+	    if (adjust_location_list (dso, cu, ptr, leni, start, adjust))
+	      return 1;
+	    ptr += leni;
+	  }
+	  break;
+        case DW_OP_GNU_const_type:
+	  read_uleb128 (ptr);
+	  ptr += *ptr + 1;
+	  break;
+	case DW_OP_GNU_deref_type:
+	  ++ptr;
 	  read_uleb128 (ptr);
 	  break;
 	default:
@@ -706,6 +732,10 @@ adjust_attributes (DSO *dso, unsigned char *ptr, struct abbrev_tag *t,
 		case DW_AT_associated:
 		case DW_AT_data_location:
 		case DW_AT_byte_stride:
+		case DW_AT_GNU_call_site_value:
+		case DW_AT_GNU_call_site_data_value:
+		case DW_AT_GNU_call_site_target:
+		case DW_AT_GNU_call_site_target_clobbered:
 		  if (adjust_location_list (dso, cu, ptr, len, start, adjust))
 		    return NULL;
 		  break;

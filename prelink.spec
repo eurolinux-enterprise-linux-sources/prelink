@@ -1,14 +1,19 @@
 Summary: An ELF prelinking utility
 Name: prelink
-Version: 0.4.4
-Release: 1%{?dist}
+Version: 0.4.6
+Release: 3.1%{?dist}
+%global svnver 196
 License: GPLv2+
 Group: System Environment/Base
-%define date 20101123
+%define date 20111012
+# svn export svn://sourceware.org/svn/prelink/trunk@%{svnver} prelink
+# tar cf - prelink | bzip2 -9 > prelink-%{date}.tar.bz2
 Source: http://people.redhat.com/jakub/prelink/prelink-%{date}.tar.bz2
 Source2: prelink.conf
 Source3: prelink.cron
 Source4: prelink.sysconfig
+Patch1: prelink-dwarf4-fixes.patch
+Patch2: prelink-rh788238.patch
 Buildroot: %{_tmppath}/prelink-root
 #BuildRequires: libelf-devel >= 0.7.0-5
 BuildRequires: elfutils-libelf-devel-static
@@ -17,7 +22,7 @@ BuildRequires: glibc-static
 Requires: glibc >= 2.2.4-18, coreutils, findutils
 Requires: util-linux, gawk, grep
 # For now
-ExclusiveArch: %{ix86} alpha sparc sparcv9 sparc64 s390 s390x x86_64 ppc ppc64
+ExclusiveArch: %{ix86} alpha sparc sparcv9 sparc64 s390 s390x x86_64 ppc ppc64 %{arm}
 
 %description
 The prelink package contains a utility which modifies ELF shared libraries
@@ -26,12 +31,15 @@ and thus programs come up faster.
 
 %prep
 %setup -q -n prelink
+%patch1 -p1
+%patch2 -p1
+chmod 755 testsuite/unprel1.sh
 
 %build
 sed -i -e '/^prelink_LDADD/s/$/ -lpthread/' src/Makefile.{am,in}
 %configure --disable-shared
 make %{_smp_mflags}
-%if 0%{?fedora} >= 13
+%if 0%{?fedora} >= 13 || 0%{?rhel} >= 7
 %define testcc CC='gcc -Wl,--add-needed' CXX='g++ -Wl,--add-needed'
 %else
 %define testcc %{nil}
@@ -100,6 +108,42 @@ rm -rf %{buildroot}
 %attr(0644,root,root) %verify(not md5 size mtime) %ghost %config(missingok,noreplace) /var/log/prelink/prelink.log
 
 %changelog
+* Fri Jul 19 2013 Jakub Jelinek <jakub@redhat.com> 0.4.6-3.1
+- fix saving of cache if some dependencies are unprelinkable and their                                            
+  dependencies bad (#788238)                                                                                      
+- fix up DWARF4 DW_AT_data_member_location handling                                                               
+- add .debug_macro support                                                                                        
+- add DWZ multifile support                                                                                       
+
+* Wed Oct 12 2011 Jakub Jelinek <jakub@redhat.com> 0.4.6-3
+- add --layout-page-size=N option, default to --layout-page-size=32768
+  on AMD Bulldozer (#739460)
+- handle 0%%{?rhel} >= 7 like 0%%{?fedora} >= 13
+
+* Fri Aug 26 2011 Jakub Jelinek <jakub@redhat.com> 0.4.6-2
+- fix cxx3.sh for ppc
+
+* Fri Aug 26 2011 Jakub Jelinek <jakub@redhat.com> 0.4.6-1
+- enable for arm (#733089)
+  - adjust arm default dynamic linker
+  - fix up fast PIE detection to handle PT_LOPROC ... PT_HIPROC phdrs
+    before PT_PHDR
+  - disable cxx{1,2}.sh test checking for conflict removal on arm
+    due to EABI weirdnesses, add new cxx3.sh test that tests conflict
+    removal even on arm
+
+* Wed Jun 22 2011 Jakub Jelinek <jakub@redhat.com> 0.4.5-3
+- handle DW_OP_GNU_parameter_ref
+
+* Tue May 31 2011 Jakub Jelinek <jakub@redhat.com> 0.4.5-2
+- handle DW_OP_GNU_{{const,regval,deref}_type,convert,reinterpret}
+
+* Fri Apr  1 2011 Jakub Jelinek <jakub@redhat.com> 0.4.5-1
+- handle DW_OP_GNU_entry_value and DW_AT_GNU_call_site*
+
+* Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.4.4-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
 * Tue Nov 23 2010 Jakub Jelinek <jakub@redhat.com> 0.4.4-1
 - support copying over extended attributes (#456105)
 - handle DW_OP_GNU_implicit_pointer, fix handling of DW_OP_call_ref

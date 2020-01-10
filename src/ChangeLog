@@ -1,3 +1,91 @@
+2011-10-12  Jakub Jelinek  <jakub@redhat.com>
+
+	* src/main.c (layout_page_size): New variable.
+	(OPT_LAYOUT_PAGE_SIZE): Define.
+	(options): Add --layout-page-size option.
+	(set_default_layout_page_size): New function in i?86/x86_64
+	resp. empty macro on other architectures.
+	(main): Call it.
+	* src/arch-i386.c (i386_layout_libs_init): Fail if
+	l->max_page_size is larger than 2MB and exec_shield is true.
+	Compute reg0s as REG0S rounded up to l->max_page_size
+	boundary and use it instead of REG0S.
+	(i386_layout_libs_pre): Compute reg0s as REG0S rounded up to
+	l->max_page_size boundary and use it instead of REG0S.
+	Fix up a pasto in computation of virt parameter for
+	third i386_find_free_addr call.
+	* src/prelink.h (layout_page_size): New decl.
+	* src/layout.c (layout_libs): Set max_page_size and
+	l.max_page_size to maximum of plarch->max_page_size
+	and layout_page_size.  Fail if mmap_base or mmap_end
+	aren't max_page_size aligned.
+	* src/arch-ppc.c (ppc_layout_libs_pre): Give up if
+	l->max_page_size is larger than 64KB.
+
+2011-08-26  Jakub Jelinek  <jakub@redhat.com>
+
+	* testsuite/cxx3.sh: Expect fewer conflicts.
+
+	* src/arch-arm.c (PL_ARCH): Change .dynamic_linker to
+	/lib/ld-linux.so.3.
+
+2011-08-25  Jakub Jelinek  <jakub@redhat.com>
+
+	* src/gather.c (gather_func): When looking for PT_PHDR header,
+	skip any PT_LOPROC ... PR_HIPROC phdrs.
+
+	* testsuite/cxx1.sh: Don't check for any "Removing C++ conflict"
+	messages on arm.
+	* testsuite/cxx2.sh: Likewise.
+	* testsuite/cxx3.sh: New test.
+	* testsuite/cxx3.C: New file.
+	* testsuite/cxx3.h: New file.
+	* testsuite/cxx3lib1.C: New file.
+	* testsuite/cxx3lib2.C: New file.
+	* testsuite/Makefile.am (TESTS): Add cxx3.sh.
+	* testsuite/Makefile.in: Regenerated.
+
+2011-08-25  William Cohen  <wcohen@redhat.com>
+
+	* testsuite/shuffle2.c: Use %nobits instead of @nobits
+	to be arm assembler friendly.
+	* testsuite/shuffle9.c: Likewise.
+	* testsuite/reloc5.c (main): Likewise.
+
+2011-06-22  Jakub Jelinek  <jakub@redhat.com>
+
+	* src/dwarf2.h (DW_OP_GNU_parameter_ref): Define.
+	* src/dwarf2.c (adjust_location_list): Handle
+	DW_OP_GNU_parameter_ref.
+
+2011-05-11  Jakub Jelinek  <jakub@redhat.com>
+
+	* src/dwarf2.h (DW_OP_GNU_const_type, DW_OP_GNU_regval_type,
+	DW_OP_GNU_deref_type, DW_OP_GNU_convert, DW_OP_GNU_reinterpret):
+	Define.
+	* src/dwarf2.c (adjust_location_list): Handle DW_OP_GNU_const_type,
+	DW_OP_GNU_retval_type, DW_OP_GNU_defer_type, DW_OP_GNU_convert and
+	DW_OP_GNU_reinterpret.
+
+2011-04-01  Jakub Jelinek  <jakub@redhat.com>
+
+	* src/dwarf2.h (DW_TAG_GNU_template_template_param,
+	DW_TAG_GNU_template_parameter_pack, DW_TAG_GNU_formal_parameter_pack,
+	DW_TAG_GNU_call_site, DW_TAG_GNU_call_site_parameter,
+	DW_AT_GNU_vector, DW_AT_GNU_guarded_by, DW_AT_GNU_pt_guarded_by,
+	DW_AT_GNU_guarded, DW_AT_GNU_pt_guarded, DW_AT_GNU_locks_excluded,
+	DW_AT_GNU_exclusive_locks_required, DW_AT_GNU_shared_locks_required,
+	DW_AT_GNU_odr_signature, DW_AT_GNU_template_name,
+	DW_AT_GNU_call_site_value, DW_AT_GNU_call_site_data_value,
+	DW_AT_GNU_call_site_target, DW_AT_GNU_call_site_target_clobbered,
+	DW_AT_GNU_tail_call, DW_AT_GNU_all_tail_call_sites,
+	DW_AT_GNU_all_call_sites, DW_AT_GNU_all_source_call_sites,
+	DW_OP_GNU_entry_value): Define.
+	* src/dwarf2.c (adjust_location_list): Handle DW_OP_GNU_entry_value.
+	(adjust_attributes): Handle DW_AT_GNU_call_site_value,
+	DW_AT_GNU_call_site_data_value, DW_AT_GNU_call_site_target and
+	DW_AT_GNU_call_site_target_clobbered.
+
 2010-11-23  Jakub Jelinek  <jakub@redhat.com>
 
 	* src/dwarf2.h (DW_OP_GNU_implicit_pointer): Define.
