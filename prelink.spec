@@ -1,7 +1,7 @@
 Summary: An ELF prelinking utility
 Name: prelink
 Version: 0.5.0
-Release: 6%{?dist}
+Release: 9%{?dist}
 %global svnver 209
 License: GPLv2+
 Group: System Environment/Base
@@ -13,6 +13,7 @@ Source2: prelink.conf
 Source3: prelink.cron
 Source4: prelink.sysconfig
 Patch0: prelink-armhf-dynamic-linker.patch
+Patch1: prelink-rh1357016.patch
 
 BuildRequires: elfutils-libelf-devel-static
 BuildRequires: libselinux-static, libselinux-utils
@@ -33,7 +34,10 @@ and thus programs come up faster.
 # We have two possible dynamic linkers on ARM (soft/hard float ABI). For now,
 # specifically patch the name of the linker on hard float systems. FIXME.
 %ifarch armv7hl
-%patch0 -p1 -b .armhfp-dynamic-linker
+%patch0 -p1 -b .armhfp-dynamic-linker~
+%endif
+%ifarch ppc64
+%patch1 -p1 -b .rh1357016~
 %endif
 
 %build
@@ -101,6 +105,15 @@ touch /var/lib/prelink/force
 %attr(0644,root,root) %verify(not md5 size mtime) %ghost %config(missingok,noreplace) /var/log/prelink/prelink.log
 
 %changelog
+* Wed Aug 17 2016 Jakub Jelinek <jakub@redhat.com> 0.5.0-9
+- fix prelink SHT_NOBITS to SHT_PROGBITS conversion on ppc64 (#1357016)
+
+* Mon Aug  1 2016 Marek Polacek <polacek@redhat.com> 0.5.0-8
+- rebuild due to broken redhat-rpm-config
+
+* Wed Jul 27 2016 Marek Polacek <polacek@redhat.com> 0.5.0-7
+- symlink prelink to /usr/bin/true and disable testing on ppc64 (#1357016)
+
 * Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 0.5.0-6
 - Mass rebuild 2014-01-24
 
